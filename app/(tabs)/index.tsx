@@ -1,11 +1,21 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 
 import { Calendar } from '@/components/ui/Calendar';
+import { format } from 'date-fns';
 
 export default function HomeScreen() {
   return (
     <View className='m-10 '>
-      <Calendar />;
+      <Calendar
+        renderEvents={(date) => {
+          return (
+            <View>
+              <Text>selected date: {format(date, 'd MMM yyyy')}</Text>
+            </View>
+          );
+        }}
+      />
+      ;
     </View>
   );
 }

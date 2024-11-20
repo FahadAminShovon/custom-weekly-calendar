@@ -4,18 +4,15 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import {
   endOfMonth,
   eachDayOfInterval,
-  differenceInCalendarWeeks,
   format,
   endOfWeek,
   startOfWeek,
   isBefore,
   isAfter,
   addWeeks,
-  add,
+  isEqual,
 } from 'date-fns';
 import { useCalendar } from './useCalendar';
-
-const today = new Date();
 
 const Day = ({ children }: { children: string }) => (
   <Text className='flex-1 bg-red-300 text-center'>{children}</Text>
@@ -24,22 +21,17 @@ const Day = ({ children }: { children: string }) => (
 type CalendarProps = { renderEvents?: (_day: Date) => React.ReactNode };
 
 const Calendar = ({ renderEvents }: CalendarProps) => {
-  const { firstDayCurrentMonth, nextMonth, previousMonth } = useCalendar();
-
-  const [weekOfMonth, setWeekOfMonth] = useState(() => {
-    return differenceInCalendarWeeks(today, firstDayCurrentMonth) + 1;
-  });
-
-  const weeksInCurrentMonth = useMemo(() => {
-    const lastDayOfCurrentMonth = endOfMonth(firstDayCurrentMonth);
-
-    const startOfFirstWeek = startOfWeek(firstDayCurrentMonth);
-    const endOfLastWeek = endOfWeek(lastDayOfCurrentMonth);
-    const numberOfWeeks =
-      differenceInCalendarWeeks(endOfLastWeek, startOfFirstWeek) + 1; // +1 because weeks are 1-based
-
-    return numberOfWeeks;
-  }, [firstDayCurrentMonth]);
+  const {
+    firstDayCurrentMonth,
+    weekOfMonth,
+    previousWeek: handlePreviousWeek,
+    nextWeek: handleNextWeek,
+    updateNextMonthAndWeek: handleNextMonth,
+    updatePreviousMonthAndWeek: handlePreviousMonth,
+    today,
+    selectedDate,
+    setSelectedDate,
+  } = useCalendar();
 
   const days = useMemo(() => {
     const startOfCurrentWeek = addWeeks(firstDayCurrentMonth, weekOfMonth - 1);
@@ -51,62 +43,9 @@ const Calendar = ({ renderEvents }: CalendarProps) => {
     });
   }, [firstDayCurrentMonth, weekOfMonth]);
 
-  const handleNextWeek = () => {
-    const weekEnd = endOfMonth(firstDayCurrentMonth).getDay();
-    let updateMonth = false;
-
-    if (weekEnd === 6 && weekOfMonth === weeksInCurrentMonth) {
-      updateMonth = true;
-    } else if (weekEnd !== 6 && weekOfMonth === weeksInCurrentMonth - 1) {
-      updateMonth = true;
-    }
-
-    if (updateMonth) {
-      nextMonth();
-      setWeekOfMonth(1);
-    } else {
-      setWeekOfMonth((prev) => prev + 1);
-    }
-  };
-
-  const handlePreviousWeek = () => {
-    if (weekOfMonth === 1) {
-      const tempPreviousMonth = add(firstDayCurrentMonth, { months: -1 });
-      const weeksInPreviousMonth =
-        differenceInCalendarWeeks(
-          endOfMonth(tempPreviousMonth),
-          startOfWeek(tempPreviousMonth)
-        ) + 1;
-
-      previousMonth();
-      const weekEnd = endOfMonth(tempPreviousMonth).getDay();
-
-      if (weekEnd === 6) {
-        setWeekOfMonth(weeksInPreviousMonth - 1);
-      } else {
-        setWeekOfMonth(weeksInCurrentMonth);
-      }
-      return;
-    }
-    setWeekOfMonth((prev) => prev - 1);
-  };
-
-  const handleNextMonth = () => {
-    nextMonth();
-    setWeekOfMonth(1);
-  };
-
-  const handlePreviousMonth = () => {
-    previousMonth();
-    setWeekOfMonth(1);
-  };
-
   return (
     <View>
       <Text>{format(firstDayCurrentMonth, 'MMMM yyyy')}</Text>
-      <Text>
-        {weekOfMonth} {weeksInCurrentMonth}
-      </Text>
       <View className='flex flex-row'>
         <TouchableOpacity onPress={handlePreviousMonth} className='flex-1'>
           <Text>Previous month</Text>
@@ -143,18 +82,26 @@ const Calendar = ({ renderEvents }: CalendarProps) => {
             ? false
             : true;
           return (
-            <View
+            <TouchableOpacity
               key={format(day, 'yyyy-MM-dd')}
               className={`py-2 ${!isCurrentMonth ? 'text-gray-300' : ''} ${
-                isToday ? 'bg-gray-200' : ''
-              } flex-1 `}
+                isEqual(selectedDate, day)
+                  ? 'bg-blue-200'
+                  : isToday
+                  ? 'bg-gray-200'
+                  : ''
+              }  flex-1 `}
+              onPress={() => {
+                setSelectedDate(day);
+              }}
             >
               <Text className='text-center'>{format(day, 'd')}</Text>
-              {renderEvents && renderEvents(day)}
-            </View>
+            </TouchableOpacity>
           );
         })}
       </View>
+
+      {renderEvents && renderEvents(selectedDate)}
     </View>
   );
 };
