@@ -22,30 +22,28 @@ type CalendarProps = { renderEvents?: (_day: Date) => React.ReactNode };
 
 const Calendar = ({ renderEvents }: CalendarProps) => {
   const {
-    firstDayCurrentMonth,
-    weekOfMonth,
     previousWeek: handlePreviousWeek,
     nextWeek: handleNextWeek,
-    updateNextMonthAndWeek: handleNextMonth,
-    updatePreviousMonthAndWeek: handlePreviousMonth,
+    nextMonth: handleNextMonth,
+    previousMonth: handlePreviousMonth,
     today,
     selectedDate,
     setSelectedDate,
+    firstDayCurrentMonth,
   } = useCalendar();
 
   const days = useMemo(() => {
-    const startOfCurrentWeek = addWeeks(firstDayCurrentMonth, weekOfMonth - 1);
-    const weekStart = startOfWeek(startOfCurrentWeek);
-    const weekEnd = endOfWeek(startOfCurrentWeek);
+    const weekStart = startOfWeek(selectedDate);
+    const weekEnd = endOfWeek(selectedDate);
     return eachDayOfInterval({
       start: weekStart,
       end: weekEnd,
     });
-  }, [firstDayCurrentMonth, weekOfMonth]);
+  }, [selectedDate]);
 
   return (
     <View>
-      <Text>{format(firstDayCurrentMonth, 'MMMM yyyy')}</Text>
+      <Text>{format(selectedDate, 'MMMM yyyy')}</Text>
       <View className='flex flex-row'>
         <TouchableOpacity onPress={handlePreviousMonth} className='flex-1'>
           <Text>Previous month</Text>
@@ -84,7 +82,7 @@ const Calendar = ({ renderEvents }: CalendarProps) => {
           return (
             <TouchableOpacity
               key={format(day, 'yyyy-MM-dd')}
-              className={`py-2 ${!isCurrentMonth ? 'text-gray-300' : ''} ${
+              className={`py-2 ${
                 isEqual(selectedDate, day)
                   ? 'bg-blue-200'
                   : isToday
@@ -95,7 +93,13 @@ const Calendar = ({ renderEvents }: CalendarProps) => {
                 setSelectedDate(day);
               }}
             >
-              <Text className='text-center'>{format(day, 'd')}</Text>
+              <Text
+                className={`text-center ${
+                  !isCurrentMonth ? 'text-gray-400' : ''
+                }`}
+              >
+                {format(day, 'd')}
+              </Text>
             </TouchableOpacity>
           );
         })}
