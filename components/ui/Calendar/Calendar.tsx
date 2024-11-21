@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 import {
@@ -9,7 +9,6 @@ import {
   startOfWeek,
   isBefore,
   isAfter,
-  addWeeks,
   isEqual,
 } from 'date-fns';
 import { useCalendar } from './useCalendar';
@@ -31,15 +30,15 @@ const Calendar = ({ renderEvents }: CalendarProps) => {
     setSelectedDate,
     firstDayCurrentMonth,
   } = useCalendar();
+  const weekStart = startOfWeek(selectedDate);
 
   const days = useMemo(() => {
-    const weekStart = startOfWeek(selectedDate);
     const weekEnd = endOfWeek(selectedDate);
     return eachDayOfInterval({
       start: weekStart,
       end: weekEnd,
     });
-  }, [selectedDate]);
+  }, [weekStart]);
 
   return (
     <View>
